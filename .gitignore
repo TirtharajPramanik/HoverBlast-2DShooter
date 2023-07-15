@@ -1,5 +1,7 @@
-main
 *.dSYM
 .vscode
 .DS_Store
 .env
+
+main
+player
