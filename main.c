@@ -1,30 +1,26 @@
-#include <raylib.h>
+#include "player.h"
 
-#define WIDTH 800
-#define HEIGHT 800
+struct Ship player, enemy;
 
-void move_ball(Vector2 *ballPos, int speed);
+void drawFrame(void);
+void updateFrame(void);
 
 int main(void)
 {
-    Vector2 ballPos = {WIDTH / 2, HEIGHT / 2};
-    int speed = 300;
+    player = initPlayer(window_xCellCount / 2, window_yCellCount - 2, 1);
+    enemy = initPlayer(window_xCellCount / 2, 1, -1);
 
-    InitWindow(WIDTH, HEIGHT, "Game Window");
-    SetTargetFPS(60);
+    InitWindow(windowWidth, windowHeight, windowTitle);
+    SetTargetFPS(30);
 
     while (!WindowShouldClose())
     {
-        // Update
-        move_ball(&ballPos, speed);
+        updateFrame();
 
-        // Draw
         BeginDrawing();
-
         ClearBackground(RAYWHITE);
 
-        DrawCircle(ballPos.x, ballPos.y, 10, GRAY);
-
+        drawFrame();
         EndDrawing();
     }
 
@@ -32,43 +28,19 @@ int main(void)
     return 0;
 }
 
-void move_ball(Vector2 *ballPos, int speed)
+void updateFrame(void)
 {
-    short kw, ks, ka, kd;
-    kw = ks = ka = kd = 0;
-    if (IsKeyDown(KEY_W))
-        kw = 1;
-    if (IsKeyDown(KEY_S))
-        ks = 1;
-    if (IsKeyDown(KEY_A))
-        ka = 1;
-    if (IsKeyDown(KEY_D))
-        kd = 1;
-    const int p = kw + ks + ka + kd;
+    movePlayer(&player);
 
-    if (p)
-    {
-        float delta = speed * GetFrameTime() / p;
-        if (kw)
-            ballPos->y -= delta;
-        if (ks)
-            ballPos->y += delta;
-        if (ka)
-            ballPos->x -= delta;
-        if (kd)
-            ballPos->x += delta;
-    }
+    moveEnemy(&enemy);
 }
 
-// void move_ball(Vector2 *ballPos, int speed)
-// {
-//     float delta = speed * GetFrameTime();
-//     if (IsKeyDown(KEY_W))
-//         ballPos->y -= delta;
-//     if (IsKeyDown(KEY_S))
-//         ballPos->y += delta;
-//     if (IsKeyDown(KEY_A))
-//         ballPos->x -= delta;
-//     if (IsKeyDown(KEY_D))
-//         ballPos->x += delta;
-// }
+void drawFrame(void)
+{
+    // center divider
+    DrawLine(0, game_yCellCount * cellHeight, game_xCellCount * cellWidth, game_yCellCount * cellHeight, BLUE);
+
+    drawPlayer(&player, MAROON);
+
+    drawPlayer(&enemy, BLUE);
+}
