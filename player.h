@@ -3,7 +3,7 @@
 
 struct Player
 {
-    float xPos, yPos, width, height, speed, accel, maxSpeed, xDelta, yDelta;
+    float xPos, yPos, width, height, accel, xSpeed, ySpeed;
 };
 
 void initPlayer(struct Player *player, float xPos, float yPos, float width, float height, float accel)
@@ -13,10 +13,8 @@ void initPlayer(struct Player *player, float xPos, float yPos, float width, floa
     player->width = width;
     player->height = height;
     player->accel = accel;
-    player->maxSpeed = 10000;
-    player->speed = 0;
-    player->xDelta = 0;
-    player->yDelta = 0;
+    player->xSpeed = 0;
+    player->ySpeed = 0;
 }
 
 void drawPlayer(struct Player *player, Color color)
@@ -24,51 +22,62 @@ void drawPlayer(struct Player *player, Color color)
     DrawRectangle(player->xPos, player->yPos, player->width, player->height, color);
 }
 
-void moveEnemy(struct Player *player)
+void movePlayer(struct Player *player, int posDelta)
 {
+    int *moves = (posDelta == -1) ? (int[]){KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN} : (int[]){KEY_A, KEY_D, KEY_W, KEY_S};
+
     bool xAccel = true, yAccel = true;
 
-    if (IsKeyDown(KEY_UP))
-        player->yDelta = 1, player->xDelta = 0;
-    else if (IsKeyDown(KEY_DOWN))
-        player->yDelta = -1, player->xDelta = 0;
-    else
-        yAccel = false;
-
-    if (IsKeyDown(KEY_LEFT))
-        player->xDelta = 1, player->yDelta = 0;
-    else if (IsKeyDown(KEY_RIGHT))
-        player->xDelta = -1, player->yDelta = 0;
+    if (IsKeyDown(moves[0]))
+        player->xSpeed -= player->accel;
+    else if (IsKeyDown(moves[1]))
+        player->xSpeed += player->accel;
     else
         xAccel = false;
 
-    if (xAccel || yAccel)
+    if (IsKeyDown(moves[2]))
+        player->ySpeed -= player->accel;
+    else if (IsKeyDown(moves[3]))
+        player->ySpeed += player->accel;
+    else
+        yAccel = false;
+
+    if (xAccel)
     {
-        if (player->speed < player->maxSpeed)
-        {
-            player->speed += player->accel;
-            if (player->speed > player->maxSpeed)
-                player->speed = player->maxSpeed;
-        }
+        if (player->xSpeed > maxSpeed)
+            player->xSpeed = maxSpeed;
+        else if (player->xSpeed < -maxSpeed)
+            player->xSpeed = -maxSpeed;
     }
-    else if (player->speed > 0)
+    if (yAccel)
     {
-        player->speed -= player->accel;
-        if (player->speed < 0)
-            player->speed = 0;
+        if (player->ySpeed > maxSpeed)
+            player->ySpeed = maxSpeed;
+        else if (player->ySpeed < -maxSpeed)
+            player->ySpeed = -maxSpeed;
     }
 
-    float frameDelta = player->speed * GetFrameTime();
-    player->xPos += player->xDelta * frameDelta;
-    player->yPos += player->yDelta * frameDelta;
+    float frameDelta = GetFrameTime() * posDelta;
+    player->xPos += player->xSpeed * frameDelta;
+    player->yPos += player->ySpeed * frameDelta;
 
     if (player->xPos < 0)
         player->xPos = 0;
     else if (player->xPos > gameWidth - player->width)
         player->xPos = gameWidth - player->width;
 
-    if (player->yPos < 0)
-        player->yPos = 0;
-    else if (player->yPos > gameHeight - player->height)
-        player->yPos = gameHeight - player->height;
+    if (posDelta == -1)
+    {
+        if (player->yPos < 0)
+            player->yPos = 0;
+        else if (player->yPos > gameHeight - player->height)
+            player->yPos = gameHeight - player->height;
+    }
+    else
+    {
+        if (player->yPos < 0)
+            player->yPos = 0;
+        else if (player->yPos < gameHeight)
+            player->yPos = gameHeight;
+    }
 }

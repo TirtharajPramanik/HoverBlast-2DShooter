@@ -2,7 +2,7 @@
 
 #define W 40
 #define H 60
-#define A 100
+#define A 10
 
 struct Player enemy, player;
 
@@ -33,9 +33,9 @@ int main(void)
 
 void updateFrame(void)
 {
-    moveEnemy(&enemy);
+    movePlayer(&enemy, -1);
 
-    // movePlayer(&player);
+    movePlayer(&player, 1);
 }
 
 void drawFrame(void)
