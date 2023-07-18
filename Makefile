@@ -9,4 +9,4 @@ build: ${FILE}.c
 	eval cc ${FILE}.c $(ARGS) -o ${FILE}
 
 clean:
-	rm ${FILE}
+	rm -r ${FILE} ${FILE}.dSYM

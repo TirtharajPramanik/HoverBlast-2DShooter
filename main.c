@@ -1,14 +1,15 @@
-#include "player.h"
+#include "game.h"
+#include "debug.h"
 
-struct Player enemy, player;
+Ship enemy, player;
 
 void drawFrame(void);
 void updateFrame(void);
 
 int main(void)
 {
-    initPlayer(&enemy, windowWidth / 2, 0, true);
-    initPlayer(&player, windowWidth / 2, windowHeight, false);
+    initShip(&enemy, windowWidth / 2, 0, true);
+    initShip(&player, windowWidth / 2, windowHeight, false);
 
     InitWindow(windowWidth, windowHeight, windowTitle);
     SetTargetFPS(30);
@@ -29,17 +30,19 @@ int main(void)
 
 void updateFrame(void)
 {
-    movePlayer(&enemy);
-    movePlayer(&player);
+    moveShip(&enemy);
+    moveShip(&player);
 }
 
 void drawFrame(void)
 {
     // center divider
     DrawLine(0, gameHeight, gameWidth, gameHeight, BLUE);
-    // debug
-    drawPlayerSpeeds(player, enemy);
 
-    drawPlayer(&enemy, BLUE);
-    drawPlayer(&player, MAROON);
+    drawShip(&enemy, BLUE);
+    drawShip(&player, MAROON);
+
+    // debug
+    drawShipSpeed(2, enemy, player);
+    drawShipPosition(2, enemy, player);
 }
