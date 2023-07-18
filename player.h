@@ -1,53 +1,74 @@
 #pragma once
 #include "utils.h"
 
-struct Ship
+struct Player
 {
-    int xCellPos, yCellPos, speed;
+    float xPos, yPos, width, height, speed, accel, maxSpeed, xDelta, yDelta;
 };
 
-struct Ship initPlayer(int xCellPos, int yCellPos, int speed)
+void initPlayer(struct Player *player, float xPos, float yPos, float width, float height, float accel)
 {
-    struct Ship player;
-    player.speed = speed;
-    player.xCellPos = xCellPos;
-    player.yCellPos = yCellPos;
-    return player;
+    player->xPos = xPos;
+    player->yPos = yPos;
+    player->width = width;
+    player->height = height;
+    player->accel = accel;
+    player->maxSpeed = 10000;
+    player->speed = 0;
+    player->xDelta = 0;
+    player->yDelta = 0;
 }
 
-void drawPlayer(struct Ship *player, Color color)
+void drawPlayer(struct Player *player, Color color)
 {
-    DrawRectangle(player->xCellPos * cellWidth, player->yCellPos * cellHeight, cellWidth, cellHeight, color);
+    DrawRectangle(player->xPos, player->yPos, player->width, player->height, color);
 }
 
-void movePlayer(struct Ship *player)
+void moveEnemy(struct Player *player)
 {
-    if (IsKeyPressed(KEY_W) &&
-        player->yCellPos > game_yCellCount)
-        player->yCellPos -= player->speed;
-    if (IsKeyPressed(KEY_S) &&
-        player->yCellPos < window_yCellCount - 1)
-        player->yCellPos += player->speed;
-    if (IsKeyPressed(KEY_A) &&
-        player->xCellPos > 0)
-        player->xCellPos -= player->speed;
-    if (IsKeyPressed(KEY_D) &&
-        player->xCellPos < game_xCellCount - 1)
-        player->xCellPos += player->speed;
-}
+    bool xAccel = true, yAccel = true;
 
-void moveEnemy(struct Ship *player)
-{
-    if (IsKeyPressed(KEY_UP) &&
-        player->yCellPos < game_yCellCount - 1)
-        player->yCellPos -= player->speed;
-    if (IsKeyPressed(KEY_DOWN) &&
-        player->yCellPos > 0)
-        player->yCellPos += player->speed;
-    if (IsKeyPressed(KEY_LEFT) &&
-        player->xCellPos < game_xCellCount - 1)
-        player->xCellPos -= player->speed;
-    if (IsKeyPressed(KEY_RIGHT) &&
-        player->xCellPos > 0)
-        player->xCellPos += player->speed;
+    if (IsKeyDown(KEY_UP))
+        player->yDelta = 1, player->xDelta = 0;
+    else if (IsKeyDown(KEY_DOWN))
+        player->yDelta = -1, player->xDelta = 0;
+    else
+        yAccel = false;
+
+    if (IsKeyDown(KEY_LEFT))
+        player->xDelta = 1, player->yDelta = 0;
+    else if (IsKeyDown(KEY_RIGHT))
+        player->xDelta = -1, player->yDelta = 0;
+    else
+        xAccel = false;
+
+    if (xAccel || yAccel)
+    {
+        if (player->speed < player->maxSpeed)
+        {
+            player->speed += player->accel;
+            if (player->speed > player->maxSpeed)
+                player->speed = player->maxSpeed;
+        }
+    }
+    else if (player->speed > 0)
+    {
+        player->speed -= player->accel;
+        if (player->speed < 0)
+            player->speed = 0;
+    }
+
+    float frameDelta = player->speed * GetFrameTime();
+    player->xPos += player->xDelta * frameDelta;
+    player->yPos += player->yDelta * frameDelta;
+
+    if (player->xPos < 0)
+        player->xPos = 0;
+    else if (player->xPos > gameWidth - player->width)
+        player->xPos = gameWidth - player->width;
+
+    if (player->yPos < 0)
+        player->yPos = 0;
+    else if (player->yPos > gameHeight - player->height)
+        player->yPos = gameHeight - player->height;
 }

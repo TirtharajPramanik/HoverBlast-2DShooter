@@ -1,18 +1,21 @@
 #include "player.h"
 
-struct Ship player, enemy;
+#define W 40
+#define H 60
+#define A 100
+
+struct Player enemy, player;
 
 void drawFrame(void);
 void updateFrame(void);
 
 int main(void)
 {
-    player = initPlayer(window_xCellCount / 2, window_yCellCount - 2, 1);
-    enemy = initPlayer(window_xCellCount / 2, 1, -1);
+    initPlayer(&enemy, windowWidth / 2, 0, W, H, A);
+    initPlayer(&player, windowWidth / 2, windowHeight - H, W, H, A);
 
     InitWindow(windowWidth, windowHeight, windowTitle);
     SetTargetFPS(30);
-
     while (!WindowShouldClose())
     {
         updateFrame();
@@ -30,17 +33,17 @@ int main(void)
 
 void updateFrame(void)
 {
-    movePlayer(&player);
-
     moveEnemy(&enemy);
+
+    // movePlayer(&player);
 }
 
 void drawFrame(void)
 {
     // center divider
-    DrawLine(0, game_yCellCount * cellHeight, game_xCellCount * cellWidth, game_yCellCount * cellHeight, BLUE);
-
-    drawPlayer(&player, MAROON);
+    DrawLine(0, gameHeight, gameWidth, gameHeight, BLUE);
 
     drawPlayer(&enemy, BLUE);
+
+    drawPlayer(&player, MAROON);
 }
