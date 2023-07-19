@@ -2,31 +2,37 @@
 #include <raylib.h>
 
 const char windowTitle[] = "Dungeon Fighter";
-const int windowWidth = 800, windowHeight = 800;
-const int gameWidth = windowWidth, gameHeight = windowHeight / 2;
+const int windowWidth = 740, windowHeight = 820;
+const int railWidth = windowHeight - windowWidth;
+const int gameWidth = windowWidth, gameHeight = (windowHeight - railWidth) / 2;
 
 typedef struct Ship
 {
     float xPos, yPos, width, height, accel, maxSpeed, xSpeed, ySpeed;
     bool isEnemy;
+    Texture2D texture;
 } Ship;
 
-void initShip(Ship *ship, float xPos, float yPos, bool isEnemy)
+void initShip(Ship *ship, float xPos, float yPos, bool isEnemy, Texture2D *texture)
 {
     ship->isEnemy = isEnemy;
-    ship->width = 40;
-    ship->height = 60;
+    ship->texture = *texture;
+    ship->width = texture->width;
+    ship->height = texture->height;
     ship->xPos = xPos;
-    ship->yPos = ship->isEnemy ? yPos : yPos - ship->height;
-    ship->accel = 25;
-    ship->maxSpeed = 250;
+    ship->yPos = isEnemy ? yPos : yPos - ship->height;
+    ship->accel = 30;
+    ship->maxSpeed = 300;
     ship->xSpeed = 0;
     ship->ySpeed = 0;
 }
 
-void drawShip(Ship *ship, Color color)
+void drawShip(Ship *ship)
 {
-    DrawRectangle(ship->xPos, ship->yPos, ship->width, ship->height, color);
+    DrawTexturePro(ship->texture, (Rectangle){0, 0, ship->texture.width, ship->texture.height},
+                   (Rectangle){ship->xPos, ship->yPos, ship->width, ship->height},
+                   ship->isEnemy ? (Vector2){ship->width, ship->height} : (Vector2){0, 0},
+                   ship->isEnemy ? 180 : 0, WHITE);
 }
 
 static void accelerate(int a, int b, float *speed, Ship *ship)
@@ -88,9 +94,39 @@ void moveShip(Ship *ship)
     }
     else
     {
-        if (ship->yPos < gameHeight)
-            ship->yPos = gameHeight;
+        if (ship->yPos < gameHeight + railWidth)
+            ship->yPos = gameHeight + railWidth;
         else if (ship->yPos > windowHeight - ship->height)
             ship->yPos = windowHeight - ship->height;
     }
+}
+
+typedef struct Train
+{
+    Texture2D engineTexture, healCabinTexture, bombCabinTexture, ammoCabinTexture, healthCabinTexture;
+    float xPos, yPos, cabinWidth, height;
+} Train;
+
+void initTrain(Train *train, float xPos, float yPos, Texture2D *engineTexture, Texture2D *bombCabinTexture, Texture2D *ammoCabinTexture, Texture2D *healthCabinTexture)
+{
+    train->engineTexture = *engineTexture;
+    train->ammoCabinTexture = *ammoCabinTexture;
+    train->bombCabinTexture = *bombCabinTexture;
+    train->healthCabinTexture = *healthCabinTexture;
+    train->height = railWidth;
+    train->cabinWidth = engineTexture->width / engineTexture->height * railWidth;
+    train->xPos = xPos - train->cabinWidth;
+    train->yPos = yPos;
+}
+
+void drawTrain(Train *train)
+{
+    DrawTexturePro(train->engineTexture, (Rectangle){0, 0, train->engineTexture.width, train->engineTexture.height},
+                   (Rectangle){train->xPos, train->yPos, train->cabinWidth, train->height}, (Vector2){0, 0}, 0, WHITE);
+    DrawTexturePro(train->bombCabinTexture, (Rectangle){0, 0, train->bombCabinTexture.width, train->bombCabinTexture.height},
+                   (Rectangle){train->xPos + train->cabinWidth, train->yPos, train->cabinWidth, train->height}, (Vector2){0, 0}, 0, WHITE);
+    DrawTexturePro(train->ammoCabinTexture, (Rectangle){0, 0, train->ammoCabinTexture.width, train->ammoCabinTexture.height},
+                   (Rectangle){train->xPos + train->cabinWidth * 2, train->yPos, train->cabinWidth, train->height}, (Vector2){0, 0}, 0, WHITE);
+    DrawTexturePro(train->healthCabinTexture, (Rectangle){0, 0, train->healthCabinTexture.width, train->healthCabinTexture.height},
+                   (Rectangle){train->xPos + train->cabinWidth * 3, train->yPos, train->cabinWidth, train->height}, (Vector2){0, 0}, 0, WHITE);
 }
