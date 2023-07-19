@@ -1,27 +1,26 @@
 #pragma once
-#include <raylib.h>
+#include "shot.h"
 
-const char windowTitle[] = "Dungeon Fighter";
-const int windowWidth = 800, windowHeight = 800;
-const int gameWidth = windowWidth, gameHeight = windowHeight / 2;
-
-typedef struct Ship
+typedef struct
 {
     float xPos, yPos, width, height, accel, maxSpeed, xSpeed, ySpeed;
     bool isEnemy;
+    Shot shots[maxShots];
 } Ship;
 
 void initShip(Ship *ship, float xPos, float yPos, bool isEnemy)
 {
     ship->isEnemy = isEnemy;
     ship->width = 40;
-    ship->height = 60;
     ship->xPos = xPos;
+    ship->height = 60;
     ship->yPos = ship->isEnemy ? yPos : yPos - ship->height;
     ship->accel = 25;
-    ship->maxSpeed = 250;
+    ship->maxSpeed = 350;
     ship->xSpeed = 0;
     ship->ySpeed = 0;
+    for (int i = 0; i < maxShots; i++)
+        ship->shots[i] = (Shot){0, 0, 0, 5, 500, false, false};
 }
 
 void drawShip(Ship *ship, Color color)
@@ -29,35 +28,35 @@ void drawShip(Ship *ship, Color color)
     DrawRectangle(ship->xPos, ship->yPos, ship->width, ship->height, color);
 }
 
-static void accelerate(int a, int b, float *speed, Ship *ship)
+static void accelerate(int xAxis, int yAxis, float *speed, float accel, float maxSpeed)
 {
-    if (IsKeyDown(a))
+    if (IsKeyDown(xAxis))
     {
-        if (*speed > -ship->maxSpeed)
+        if (*speed > -maxSpeed)
         {
-            *speed -= ship->accel;
-            if (*speed < -ship->maxSpeed)
-                *speed = -ship->maxSpeed;
+            *speed -= accel;
+            if (*speed < -maxSpeed)
+                *speed = -maxSpeed;
         }
     }
-    else if (IsKeyDown(b))
+    else if (IsKeyDown(yAxis))
     {
-        if (*speed < ship->maxSpeed)
+        if (*speed < maxSpeed)
         {
-            *speed += ship->accel;
-            if (*speed > ship->maxSpeed)
-                *speed = ship->maxSpeed;
+            *speed += accel;
+            if (*speed > maxSpeed)
+                *speed = maxSpeed;
         }
     }
     else if (*speed < 0)
     {
-        *speed += ship->accel;
+        *speed += accel;
         if (*speed > 0)
             *speed = 0;
     }
     else if (*speed > 0)
     {
-        *speed -= ship->accel;
+        *speed -= accel;
         if (*speed < 0)
             *speed = 0;
     }
@@ -67,8 +66,8 @@ void moveShip(Ship *ship)
 {
     int *moves = (ship->isEnemy) ? (int[]){KEY_RIGHT, KEY_LEFT, KEY_DOWN, KEY_UP} : (int[]){KEY_A, KEY_D, KEY_W, KEY_S};
 
-    accelerate(moves[0], moves[1], &(ship->xSpeed), ship);
-    accelerate(moves[2], moves[3], &ship->ySpeed, ship);
+    accelerate(moves[0], moves[1], &ship->xSpeed, ship->accel, ship->maxSpeed);
+    accelerate(moves[2], moves[3], &ship->ySpeed, ship->accel, ship->maxSpeed);
 
     float frameDelta = GetFrameTime();
     ship->xPos += ship->xSpeed * frameDelta;
@@ -93,4 +92,19 @@ void moveShip(Ship *ship)
         else if (ship->yPos > windowHeight - ship->height)
             ship->yPos = windowHeight - ship->height;
     }
+}
+
+void shoot(Ship *ship)
+{
+    if (IsKeyPressed(ship->isEnemy ? KEY_F : KEY_SPACE))
+        for (int i = 0; i < maxShots; i++)
+            if (!ship->shots[i].active)
+            {
+                ship->shots[i].xPos = ship->xPos + ship->width / 2;
+                ship->shots[i].yPos = ship->yPos + (ship->isEnemy ? ship->height : 0);
+                ship->shots[i].toDown = ship->isEnemy;
+                ship->shots[i].speed = ship->maxSpeed;
+                ship->shots[i].active = true;
+                break;
+            }
 }
