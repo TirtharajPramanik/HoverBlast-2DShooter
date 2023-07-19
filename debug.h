@@ -32,7 +32,7 @@ void drawShipPosition(int args, ...)
                  ship.yPos + (ship.isEnemy ? ship.height : -FONTSIZE), FONTSIZE, BLACK);
         snprintf(text, max, "Y: %f", ship.yPos);
         DrawTextPro(GetFontDefault(), text,
-                    (Vector2){ship.xPos + ship.width / 2 - MeasureText(text, FONTSIZE) / 2 + (ship.isEnemy ? 0 : FONTSIZE),
+                    (Vector2){ship.xPos + (ship.isEnemy ? -FONTSIZE : 0),
                               ship.yPos + (ship.isEnemy ? ship.height : -FONTSIZE) + (ship.isEnemy ? 0 : FONTSIZE)},
                     (Vector2){0, 0}, ship.isEnemy ? -90 : 90, FONTSIZE, 1, BLACK);
     }

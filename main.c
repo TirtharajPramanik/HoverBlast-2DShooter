@@ -8,11 +8,16 @@ void updateFrame(void);
 
 int main(void)
 {
-    initShip(&enemy, windowWidth / 2, 0, true);
-    initShip(&player, windowWidth / 2, windowHeight, false);
-
     InitWindow(windowWidth, windowHeight, windowTitle);
     SetTargetFPS(60);
+
+    Texture2D shipTexture = LoadTexture("assets/Ship.png");
+    Texture2D redShotTexture = LoadTexture("assets/RedShot.png");
+    Texture2D blueShotTexture = LoadTexture("assets/BlueShot.png");
+
+    initShip(&enemy, gameWidth / 2, 0, true, &shipTexture, &redShotTexture);
+    initShip(&player, gameWidth / 2, windowHeight, false, &shipTexture, &blueShotTexture);
+
     while (!WindowShouldClose())
     {
         updateFrame();
@@ -23,6 +28,10 @@ int main(void)
         drawFrame();
         EndDrawing();
     }
+
+    UnloadTexture(blueShotTexture);
+    UnloadTexture(redShotTexture);
+    UnloadTexture(shipTexture);
 
     CloseWindow();
     return 0;
@@ -45,16 +54,16 @@ void updateFrame(void)
 
 void drawFrame(void)
 {
-    // center divider
+    // rail tracks
     DrawLine(0, gameHeight, gameWidth, gameHeight, BLUE);
 
-    drawShip(&enemy, BLUE);
-    drawShip(&player, MAROON);
+    drawShip(&enemy);
+    drawShip(&player);
 
     for (int i = 0; i < maxShots; i++)
     {
-        drawShot(&enemy.shots[i], BLUE);
-        drawShot(&player.shots[i], MAROON);
+        drawShot(&enemy.shots[i]);
+        drawShot(&player.shots[i]);
     }
 
     // debug

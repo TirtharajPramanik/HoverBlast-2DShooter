@@ -6,26 +6,31 @@ typedef struct
     float xPos, yPos, width, height, accel, maxSpeed, xSpeed, ySpeed;
     bool isEnemy;
     Shot shots[maxShots];
+    Texture2D texture;
 } Ship;
 
-void initShip(Ship *ship, float xPos, float yPos, bool isEnemy)
+void initShip(Ship *ship, float xPos, float yPos, bool isEnemy, Texture2D *shipTexture, Texture2D *shotTexture)
 {
     ship->isEnemy = isEnemy;
-    ship->width = 40;
+    ship->texture = *shipTexture;
+    ship->width = shipTexture->width;
     ship->xPos = xPos;
-    ship->height = 60;
+    ship->height = shipTexture->height;
     ship->yPos = ship->isEnemy ? yPos : yPos - ship->height;
-    ship->accel = 25;
-    ship->maxSpeed = 350;
+    ship->accel = 50;
+    ship->maxSpeed = 500;
     ship->xSpeed = 0;
     ship->ySpeed = 0;
     for (int i = 0; i < maxShots; i++)
-        ship->shots[i] = (Shot){0, 0, 0, 5, 500, false, false};
+        ship->shots[i] = (Shot){0, 0, 0, 6, 600, false, false, *shotTexture};
 }
 
-void drawShip(Ship *ship, Color color)
+void drawShip(Ship *ship)
 {
-    DrawRectangle(ship->xPos, ship->yPos, ship->width, ship->height, color);
+    DrawTexturePro(ship->texture, (Rectangle){0, 0, ship->texture.width, ship->texture.height},
+                   (Rectangle){ship->xPos, ship->yPos, ship->width, ship->height},
+                   ship->isEnemy ? (Vector2){ship->width, ship->height} : (Vector2){0, 0},
+                   ship->isEnemy ? 180 : 0, WHITE);
 }
 
 static void accelerate(int xAxis, int yAxis, float *speed, float accel, float maxSpeed)
@@ -100,7 +105,7 @@ void shoot(Ship *ship)
         for (int i = 0; i < maxShots; i++)
             if (!ship->shots[i].active)
             {
-                ship->shots[i].xPos = ship->xPos + ship->width / 2;
+                ship->shots[i].xPos = ship->xPos + ship->width / 2; //* (ship->isEnemy ? 1 : -1);
                 ship->shots[i].yPos = ship->yPos + (ship->isEnemy ? ship->height : 0);
                 ship->shots[i].toDown = ship->isEnemy;
                 ship->shots[i].speed = ship->maxSpeed;

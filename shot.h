@@ -5,12 +5,13 @@ typedef struct
 {
     float xPos, yPos, speed, accel, maxSpeed;
     bool active, toDown;
+    Texture2D texture;
 } Shot;
 
-void drawShot(Shot *shot, Color color)
+void drawShot(Shot *shot)
 {
     if (shot->active)
-        DrawCircle(shot->xPos, shot->yPos, 10, color);
+        DrawTextureEx(shot->texture, (Vector2){shot->xPos + shot->texture.width / 2 * (shot->toDown ? 1 : -1), shot->yPos}, shot->toDown ? 90 : -90, 1, WHITE);
 }
 
 void moveShot(Shot *shot)
