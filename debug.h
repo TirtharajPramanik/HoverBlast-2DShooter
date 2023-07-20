@@ -12,7 +12,8 @@ void drawShipSpeednHealth(int args, ...)
     for (int i = 0; i < args; i++)
     {
         Ship ship = va_arg(ap, Ship);
-        snprintf(text, max, "X: %f | Y: %f | H: %d | S: %d", ship.xSpeed, ship.ySpeed, ship.health, ship.score);
+        snprintf(text, max, "X: %f | Y: %f | H: %d | S: %d",
+                 ship.xSpeed, ship.ySpeed, ship.health, ship.score);
         DrawText(text, 0, gameHeight + (ship.isEnemy ? -FONTSIZE : 0), FONTSIZE, BLACK);
     }
     va_end(ap);
@@ -39,7 +40,7 @@ void drawShipPosition(int args, ...)
     va_end(ap);
 }
 
-void drawShipShotsSpeednPositions(int args, ...)
+void drawShotsSpeednPositions(int args, ...)
 {
     int max = 100;
     char text[max];
@@ -50,9 +51,27 @@ void drawShipShotsSpeednPositions(int args, ...)
         Ship ship = va_arg(ap, Ship);
         for (int i = 0; i < maxShots; i++)
         {
-            snprintf(text, max, "X: %f | Y: %f | S: %f", ship.shots[i].rect.x, ship.shots[i].rect.y, ship.shots[i].speed);
-            DrawText(text, gameWidth - MeasureText(text, FONTSIZE), gameHeight + 12 * (ship.isEnemy ? -(i + 1) : i), FONTSIZE, BLACK);
+            snprintf(text, max, "X: %f | Y: %f | S: %f",
+                     ship.shots[i].pos.x, ship.shots[i].pos.y, ship.shots[i].speed);
+            DrawText(text, gameWidth - MeasureText(text, FONTSIZE),
+                     gameHeight + 12 * (ship.isEnemy ? -(i + 1) : i), FONTSIZE, BLACK);
         }
     }
     va_end(ap);
+}
+
+void drawShipnShotsBounds(int args, ...)
+{
+    int max = 100;
+    char text[max];
+    va_list ap;
+    va_start(ap, args);
+    for (int i = 0; i < args; i++)
+    {
+        Ship ship = va_arg(ap, Ship);
+        DrawRectangleLines(ship.rect.x, ship.rect.y, ship.rect.width, ship.rect.height, RED);
+        for (int i = 0; i < maxShots; i++)
+            if (ship.shots[i].active)
+                DrawCircleLines(ship.shots[i].pos.x, ship.shots[i].pos.y, ship.shots[i].colider, RED);
+    }
 }

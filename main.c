@@ -3,33 +3,29 @@
 
 bool running;
 Ship enemy, player;
+Texture2D shipTexture, redShotTexture, blueShotTexture;
 
-void drawFrame(void);
-void updateFrame(void);
+void drawMenu(void);
+void drawGame(void);
+void resetGame(void);
+void updateGame(void);
 
 int main(void)
 {
     InitWindow(windowWidth, windowHeight, windowTitle);
-    SetTargetFPS(60);
-    running = true;
 
-    Texture2D shipTexture = LoadTexture("assets/Ship.png");
-    Texture2D redShotTexture = LoadTexture("assets/RedShot.png");
-    Texture2D blueShotTexture = LoadTexture("assets/BlueShot.png");
+    shipTexture = LoadTexture("assets/Ship.png");
+    redShotTexture = LoadTexture("assets/RedShot.png");
+    blueShotTexture = LoadTexture("assets/BlueShot.png");
 
-    initShip(&enemy, gameWidth / 2, 0, true, &shipTexture, &redShotTexture);
-    initShip(&player, gameWidth / 2, windowHeight, false, &shipTexture, &blueShotTexture);
+    resetGame();
+    SetTargetFPS(frameRate);
 
-    while (!WindowShouldClose() && running)
-    {
-        updateFrame();
-
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
-
-        drawFrame();
-        EndDrawing();
-    }
+    while (!WindowShouldClose())
+        if (running)
+            updateGame(), drawGame();
+        else
+            drawMenu();
 
     UnloadTexture(blueShotTexture);
     UnloadTexture(redShotTexture);
@@ -39,15 +35,21 @@ int main(void)
     return 0;
 }
 
-void updateFrame(void)
+void resetGame(void)
 {
-    if (enemy.health <= 0 ||
-        player.health <= 0)
-        running = false;
+    initShip(&enemy, gameWidth / 2, 0, true, &shipTexture, &redShotTexture);
+    initShip(&player, gameWidth / 2, windowHeight, false, &shipTexture, &blueShotTexture);
+    running = true;
+}
+
+void updateGame(void)
+{
+    (enemy.health <= 0 || player.health <= 0) ? running = false : 0;
 
     moveShip(&enemy);
     moveShip(&player);
 
+    // handle shooting & damage
     for (int i = 0; i < maxShots; i++)
     {
         moveShot(&enemy.shots[i]);
@@ -63,8 +65,27 @@ void updateFrame(void)
     shoot(&player);
 }
 
-void drawFrame(void)
+void drawMenu(void)
 {
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+
+    IsKeyPressed(KEY_ENTER) ? resetGame() : 0;
+
+    char gameOverText[] = "Game Over";
+    DrawText(gameOverText, gameWidth / 2 - MeasureText(gameOverText, 24) / 2, gameHeight - 24, 24, BLUE);
+
+    char replayText[] = "Press Enter to Replay";
+    DrawText(replayText, gameWidth / 2 - MeasureText(replayText, 24) / 2, gameHeight, 24, GREEN);
+
+    EndDrawing();
+}
+
+void drawGame(void)
+{
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
+
     // center divider
     DrawLine(0, gameHeight, gameWidth, gameHeight, BLUE);
 
@@ -77,8 +98,12 @@ void drawFrame(void)
         drawShot(&player.shots[i]);
     }
 
-    // debug
+#ifdef DEBUG
+    drawShotsSpeednPositions(2, enemy, player);
+    drawShipnShotsBounds(2, enemy, player);
     drawShipSpeednHealth(2, enemy, player);
     drawShipPosition(2, enemy, player);
-    drawShipShotsSpeednPositions(2, enemy, player);
+#endif
+
+    EndDrawing();
 }
