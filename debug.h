@@ -1,9 +1,9 @@
 #pragma once
 #include "ship.h"
 #include <stdio.h>
-#define FONTSIZE 12
+#define FONTSIZE 16
 
-void drawShipSpeed(int args, ...)
+void drawShipSpeednHealth(int args, ...)
 {
     int max = 100;
     char text[max];
@@ -12,7 +12,7 @@ void drawShipSpeed(int args, ...)
     for (int i = 0; i < args; i++)
     {
         Ship ship = va_arg(ap, Ship);
-        snprintf(text, max, "X: %f | Y: %f", ship.xSpeed, ship.ySpeed);
+        snprintf(text, max, "X: %f | Y: %f | H: %d | S: %d", ship.xSpeed, ship.ySpeed, ship.health, ship.score);
         DrawText(text, 0, gameHeight + (ship.isEnemy ? -FONTSIZE : 0), FONTSIZE, BLACK);
     }
     va_end(ap);
@@ -27,13 +27,13 @@ void drawShipPosition(int args, ...)
     for (int i = 0; i < args; i++)
     {
         Ship ship = va_arg(ap, Ship);
-        snprintf(text, max, "X: %f", ship.xPos);
-        DrawText(text, ship.xPos + ship.width / 2 - MeasureText(text, FONTSIZE) / 2,
-                 ship.yPos + (ship.isEnemy ? ship.height : -FONTSIZE), FONTSIZE, BLACK);
-        snprintf(text, max, "Y: %f", ship.yPos);
+        snprintf(text, max, "X: %f", ship.rect.x);
+        DrawText(text, ship.rect.x + ship.rect.width / 2 - MeasureText(text, FONTSIZE) / 2,
+                 ship.rect.y + (ship.isEnemy ? ship.rect.height : -FONTSIZE), FONTSIZE, BLACK);
+        snprintf(text, max, "Y: %f", ship.rect.y);
         DrawTextPro(GetFontDefault(), text,
-                    (Vector2){ship.xPos + (ship.isEnemy ? -FONTSIZE : 0),
-                              ship.yPos + (ship.isEnemy ? ship.height : -FONTSIZE) + (ship.isEnemy ? 0 : FONTSIZE)},
+                    (Vector2){ship.rect.x + (ship.isEnemy ? -FONTSIZE : 0),
+                              ship.rect.y + (ship.isEnemy ? ship.rect.height : -FONTSIZE) + (ship.isEnemy ? 0 : FONTSIZE)},
                     (Vector2){0, 0}, ship.isEnemy ? -90 : 90, FONTSIZE, 1, BLACK);
     }
     va_end(ap);
@@ -50,7 +50,7 @@ void drawShipShotsSpeednPositions(int args, ...)
         Ship ship = va_arg(ap, Ship);
         for (int i = 0; i < maxShots; i++)
         {
-            snprintf(text, max, "X: %f | Y: %f | S: %f", ship.shots[i].xPos, ship.shots[i].yPos, ship.shots[i].speed);
+            snprintf(text, max, "X: %f | Y: %f | S: %f", ship.shots[i].rect.x, ship.shots[i].rect.y, ship.shots[i].speed);
             DrawText(text, gameWidth - MeasureText(text, FONTSIZE), gameHeight + 12 * (ship.isEnemy ? -(i + 1) : i), FONTSIZE, BLACK);
         }
     }

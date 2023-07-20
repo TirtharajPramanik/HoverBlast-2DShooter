@@ -1,6 +1,7 @@
 #include "ship.h"
 #include "debug.h"
 
+bool running;
 Ship enemy, player;
 
 void drawFrame(void);
@@ -10,6 +11,7 @@ int main(void)
 {
     InitWindow(windowWidth, windowHeight, windowTitle);
     SetTargetFPS(60);
+    running = true;
 
     Texture2D shipTexture = LoadTexture("assets/Ship.png");
     Texture2D redShotTexture = LoadTexture("assets/RedShot.png");
@@ -18,7 +20,7 @@ int main(void)
     initShip(&enemy, gameWidth / 2, 0, true, &shipTexture, &redShotTexture);
     initShip(&player, gameWidth / 2, windowHeight, false, &shipTexture, &blueShotTexture);
 
-    while (!WindowShouldClose())
+    while (!WindowShouldClose() && running)
     {
         updateFrame();
 
@@ -39,6 +41,10 @@ int main(void)
 
 void updateFrame(void)
 {
+    if (enemy.health <= 0 ||
+        player.health <= 0)
+        running = false;
+
     moveShip(&enemy);
     moveShip(&player);
 
@@ -46,6 +52,11 @@ void updateFrame(void)
     {
         moveShot(&enemy.shots[i]);
         moveShot(&player.shots[i]);
+
+        if (checkShot(&player.shots[i], enemy.rect))
+            player.score++, enemy.health--;
+        if (checkShot(&enemy.shots[i], player.rect))
+            enemy.score++, player.health--;
     }
 
     shoot(&enemy);
@@ -54,7 +65,7 @@ void updateFrame(void)
 
 void drawFrame(void)
 {
-    // rail tracks
+    // center divider
     DrawLine(0, gameHeight, gameWidth, gameHeight, BLUE);
 
     drawShip(&enemy);
@@ -67,7 +78,7 @@ void drawFrame(void)
     }
 
     // debug
-    drawShipSpeed(2, enemy, player);
+    drawShipSpeednHealth(2, enemy, player);
     drawShipPosition(2, enemy, player);
     drawShipShotsSpeednPositions(2, enemy, player);
 }
