@@ -1,5 +1,5 @@
 #pragma once
-#include "consts.h"
+#include "setting.h"
 
 typedef struct
 {
@@ -39,7 +39,7 @@ void moveShot(Shot *shot)
             shot->speed = maxShotSpeed;
 
         shot->pos.y += shot->speed * GetFrameTime() * (shot->toDown ? 1 : -1);
-        if ((shot->toDown ? shot->pos.y > windowHeight : shot->pos.y < 0))
+        if ((shot->toDown ? shot->pos.y > GetScreenHeight() : shot->pos.y < 0))
             shot->active = false, shot->speed = 0;
     }
 }

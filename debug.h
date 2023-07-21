@@ -14,7 +14,7 @@ void drawShipSpeednHealth(int args, ...)
         Ship ship = va_arg(ap, Ship);
         snprintf(text, max, "X: %f | Y: %f | H: %d | S: %d",
                  ship.xSpeed, ship.ySpeed, ship.health, ship.score);
-        DrawText(text, 0, gameHeight + (ship.isEnemy ? -FONTSIZE : 0), FONTSIZE, BLACK);
+        DrawText(text, 0, gameHeight() + (ship.isEnemy ? -FONTSIZE : 0), FONTSIZE, BLACK);
     }
     va_end(ap);
 }
@@ -53,8 +53,8 @@ void drawShotsSpeednPositions(int args, ...)
         {
             snprintf(text, max, "X: %f | Y: %f | S: %f",
                      ship.shots[i].pos.x, ship.shots[i].pos.y, ship.shots[i].speed);
-            DrawText(text, gameWidth - MeasureText(text, FONTSIZE),
-                     gameHeight + 12 * (ship.isEnemy ? -(i + 1) : i), FONTSIZE, BLACK);
+            DrawText(text, gameWidth() - MeasureText(text, FONTSIZE),
+                     gameHeight() + 12 * (ship.isEnemy ? -(i + 1) : i), FONTSIZE, BLACK);
         }
     }
     va_end(ap);

@@ -13,19 +13,19 @@ typedef struct
 
 void initShip(Ship *ship, float xPos, float yPos, bool isEnemy, Texture2D *shipTexture, Texture2D *shotTexture)
 {
-    ship->texture = *shipTexture;
-    ship->rect.width = shipTexture->width;
-    ship->rect.x = xPos;
-    ship->rect.height = shipTexture->height;
-    ship->explode = false;
-    ship->isEnemy = isEnemy;
-    ship->rect.y = ship->isEnemy ? yPos : yPos - ship->rect.height;
     ship->accel = 50;
     ship->xSpeed = 0;
     ship->ySpeed = 0;
-    ship->fireRate = maxShots / 4;
     ship->score = 0;
     ship->health = 10;
+    ship->texture = *shipTexture;
+    ship->rect.width = shipTexture->width;
+    ship->rect.height = shipTexture->height;
+    ship->explode = false;
+    ship->isEnemy = isEnemy;
+    ship->rect.x = xPos;
+    ship->rect.y = ship->isEnemy ? yPos : yPos - ship->rect.height;
+    ship->fireRate = maxShots / 4;
     for (int i = 0; i < maxShots; i++)
         initShot(&ship->shots[i], 0, 0, 6, shotTexture);
 }
@@ -85,31 +85,31 @@ void moveShip(Ship *ship)
 
     if (ship->rect.x < 0)
         ship->rect.x = 0;
-    else if (ship->rect.x > gameWidth - ship->rect.width)
-        ship->rect.x = gameWidth - ship->rect.width;
+    else if (ship->rect.x > gameWidth() - ship->rect.width)
+        ship->rect.x = gameWidth() - ship->rect.width;
 
     if (ship->isEnemy)
     {
         if (ship->rect.y < 0)
             ship->rect.y = 0;
-        else if (ship->rect.y > gameHeight - ship->rect.height)
-            ship->rect.y = gameHeight - ship->rect.height;
+        else if (ship->rect.y > gameHeight() - ship->rect.height)
+            ship->rect.y = gameHeight() - ship->rect.height;
     }
     else
     {
-        if (ship->rect.y < gameHeight)
-            ship->rect.y = gameHeight;
-        else if (ship->rect.y > windowHeight - ship->rect.height)
-            ship->rect.y = windowHeight - ship->rect.height;
+        if (ship->rect.y < gameHeight())
+            ship->rect.y = gameHeight();
+        else if (ship->rect.y > GetScreenHeight() - ship->rect.height)
+            ship->rect.y = GetScreenHeight() - ship->rect.height;
     }
 }
 
 int frameCount = 0;
 void shoot(Ship *ship)
 {
-    frameCount++;
-    if (frameCount >= frameRate / ship->fireRate &&
-        IsKeyDown(ship->isEnemy ? KEY_F : KEY_SPACE))
+    if (frameCount < frameRate / ship->fireRate)
+        frameCount++;
+    else if (IsKeyDown(ship->isEnemy ? KEY_F : KEY_SPACE))
     {
         frameCount = 0;
         for (int i = 0; i < maxShots; i++)
