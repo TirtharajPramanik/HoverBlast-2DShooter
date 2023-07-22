@@ -3,18 +3,17 @@
 int main(void)
 {
     InitWindow(windowWidth, windowHeight, windowTitle);
-
+    InitAudioDevice();
     loadAssets();
     resetGame();
-    SetTargetFPS(frameRate);
 
-    running = false;
+    running = false, SetTargetFPS(frameRate);
     while (!WindowShouldClose())
-        running && !pause
-            ? (updateGame(), drawGame())
-            : (updateMenu(), drawMenu());
+        running && !pause ? (updateGame(), drawGame())
+                          : (updateMenu(), drawMenu());
 
     unloadAssets();
+    CloseAudioDevice();
     CloseWindow();
     return 0;
 }

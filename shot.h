@@ -1,33 +1,31 @@
 #pragma once
-#include "setting.h"
+#include "utils.h"
 
 typedef struct
 {
     Vector2 pos;
     float radius, colider, speed, accel;
-    bool active, toDown;
-    Texture2D texture;
+    bool active, fromEnemy;
 } Shot;
 
-void initShot(Shot *shot, float xPos, float yPos, float accel, Texture2D *texture)
+void initShot(Shot *shot, float xPos, float yPos, float accel)
 {
     shot->pos.x = xPos;
     shot->pos.y = yPos;
-    shot->texture = *texture;
-    shot->radius = texture->height / 2;
-    shot->colider = texture->height / 3;
+    shot->radius = shotsTexture.height / 2;
+    shot->colider = shotsTexture.height / 3;
     shot->speed = 0;
     shot->accel = accel;
     shot->active = false;
-    shot->toDown = false;
+    shot->fromEnemy = false;
 }
 
 void drawShot(Shot *shot)
 {
     if (shot->active)
-        DrawTextureEx(shot->texture,
-                      (Vector2){shot->pos.x + shot->radius * (shot->toDown ? 1 : -1), shot->pos.y},
-                      shot->toDown ? 90 : -90, 1, WHITE);
+        DrawTexturePro(shotsTexture, (Rectangle){shot->fromEnemy ? 0 : shotsTexture.width / 2, 0, shotsTexture.width / 2, shotsTexture.height},
+                       (Rectangle){shot->pos.x + shot->radius * (shot->fromEnemy ? 1 : -1), shot->pos.y, shotsTexture.width / 2, shotsTexture.height},
+                       (Vector2){0, 0}, shot->fromEnemy ? 90 : -90, WHITE);
 }
 
 void moveShot(Shot *shot)
@@ -38,8 +36,8 @@ void moveShot(Shot *shot)
         if (shot->speed > maxShotSpeed)
             shot->speed = maxShotSpeed;
 
-        shot->pos.y += shot->speed * GetFrameTime() * (shot->toDown ? 1 : -1);
-        if ((shot->toDown ? shot->pos.y > gameHeight() : shot->pos.y < 0))
+        shot->pos.y += shot->speed * GetFrameTime() * (shot->fromEnemy ? 1 : -1);
+        if ((shot->fromEnemy ? shot->pos.y > gameHeight() : shot->pos.y < 0))
             shot->active = false, shot->speed = 0;
     }
 }
