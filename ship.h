@@ -1,9 +1,19 @@
 #pragma once
 #include "shot.h"
 
+typedef enum
+{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    NONE
+} Direction;
+
 typedef struct
 {
     Rectangle rect;
+    Direction direc;
     Shot shots[maxShots];
     float accel, xSpeed, ySpeed;
     bool isEnemy, alive, blastSoundPlayed;
@@ -18,6 +28,7 @@ void initShip(Ship *ship, float xPos, float yPos, bool isEnemy)
     ship->ySpeed = 0;
     ship->score = 0;
     ship->health = 10;
+    ship->direc = NONE;
     ship->alive = true;
     ship->rect.x = xPos;
     ship->isEnemy = isEnemy;
@@ -67,15 +78,9 @@ bool overBlast(Ship *ship)
     return ret;
 }
 
-void drawShipStats(Ship *ship)
+static void accelerate(float *speed, bool negAxis, bool posAxis, float accel)
 {
-    drawStats(ship->isEnemy ? "Enemy" : "Player", ship->score, ship->health,
-              ship->isEnemy ? 24 : GetScreenHeight() - 24 * 4, 24, ship->isEnemy ? RED : BLUE);
-}
-
-static void accelerate(float *speed, int xAxis, int yAxis, float accel)
-{
-    if (IsKeyDown(xAxis))
+    if (negAxis)
     {
         if (*speed > -maxShipSpeed)
         {
@@ -84,7 +89,7 @@ static void accelerate(float *speed, int xAxis, int yAxis, float accel)
                 *speed = -maxShipSpeed;
         }
     }
-    else if (IsKeyDown(yAxis))
+    else if (posAxis)
     {
         if (*speed < maxShipSpeed)
         {
@@ -107,17 +112,10 @@ static void accelerate(float *speed, int xAxis, int yAxis, float accel)
     }
 }
 
-void moveShip(Ship *ship)
+static void moveShip(Ship *ship)
 {
-    int *moves = (ship->isEnemy) ? (int[]){KEY_RIGHT, KEY_LEFT, KEY_DOWN, KEY_UP}
-                                 : (int[]){KEY_A, KEY_D, KEY_W, KEY_S};
-
-    accelerate(&ship->xSpeed, moves[0], moves[1], ship->accel);
-    accelerate(&ship->ySpeed, moves[2], moves[3], ship->accel);
-
-    float frameDelta = GetFrameTime();
-    ship->rect.x += ship->xSpeed * frameDelta;
-    ship->rect.y += ship->ySpeed * frameDelta;
+    ship->rect.x += ship->xSpeed * GetFrameTime();
+    ship->rect.y += ship->ySpeed * GetFrameTime();
 
     // horizontal collision
     if (ship->rect.x < 0)
@@ -132,11 +130,22 @@ void moveShip(Ship *ship)
         ship->ySpeed > 0 ? (ship->ySpeed *= -1) : (ship->rect.y = (ship->isEnemy ? arenaHeight() : GetScreenHeight()) - ship->rect.height);
 }
 
-void shoot(Ship *ship)
+void handleMovement(Ship *ship)
+{
+    if (!ship->isEnemy)
+        accelerate(&ship->xSpeed, IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A), IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D), ship->accel),
+            accelerate(&ship->ySpeed, IsKeyDown(KEY_UP) || IsKeyDown(KEY_W), IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S), ship->accel);
+    else if (ship->direc != NONE)
+        accelerate(&ship->xSpeed, ship->direc == LEFT, ship->direc == RIGHT, ship->accel),
+            accelerate(&ship->ySpeed, ship->direc == UP, ship->direc == DOWN, ship->accel);
+    moveShip(ship);
+}
+
+void shoot(Ship *ship, bool logic)
 {
     if (ship->lastShootFrame < frameRate / ship->fireRate)
         ship->lastShootFrame++;
-    else if (IsKeyDown(ship->isEnemy ? KEY_F : KEY_SPACE))
+    else if (logic)
     {
         PlaySound(shootSound);
         ship->lastShootFrame = 0;

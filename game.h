@@ -7,12 +7,43 @@
 
 Ship enemy, player;
 bool gameover, pause;
+int botFrameDelay = 0, botFollowThresh = 300;
 
 void resetGame(void)
 {
-    pause = false, gameover = !(player.alive && enemy.alive);
+    pause = false, gameover = !(player.alive && enemy.alive), botFrameDelay = 0;
     initShip(&enemy, arenaWidth() / 2, 0, true);
     initShip(&player, arenaWidth() / 2, GetScreenHeight(), false);
+}
+
+void calculateBotMovement(Ship *enemy, Ship *player)
+{
+    // avoid bullet hits (intentinally, does not move out of the way of bullets, instead moves to the direction where is more space)
+    botFrameDelay++;
+    if (botFrameDelay > 6)
+        botFrameDelay = 0, enemy->direc = NONE;
+    else if (enemy->direc == UP || enemy->direc == DOWN)
+        enemy->direc = NONE;
+    else
+        for (int i = 0; i < maxShots; i++)
+            if (player->shots[i].active && player->shots[i].pos.y < arenaHeight())
+                enemy->direc = enemy->rect.x < arenaWidth() / 2 ? RIGHT : LEFT;
+
+    // follow player when too far
+    if (player->rect.x - enemy->rect.x > botFollowThresh)
+        enemy->direc = RIGHT;
+    else if (player->rect.x - enemy->rect.x < -botFollowThresh)
+        enemy->direc = LEFT;
+
+    // randomly move up & down
+    if (GetRandomValue(0, 100) == 0)
+        enemy->direc = GetRandomValue(0, 1) ? UP : DOWN;
+}
+
+void drawShipStats(Ship *ship)
+{
+    drawStats(ship->isEnemy ? "Enemy" : "Player", ship->score, ship->health,
+              ship->isEnemy ? 24 : GetScreenHeight() - 24 * 4, 24, ship->isEnemy ? RED : VIOLET);
 }
 
 void updateMenu(void)
@@ -67,33 +98,36 @@ void updateGame(void)
     else if (IsKeyPressed(KEY_P))
         pause = true;
 
+    calculateBotMovement(&enemy, &player);
+
     // enemy logic
     if (enemy.alive)
     {
-        moveShip(&enemy);
+        handleMovement(&enemy);
         for (int i = 0; i < maxShots; i++)
             if (checkShot(&player.shots[i], enemy.rect))
                 player.score++, enemy.health--;
-        shoot(&enemy);
+        shoot(&enemy, (enemy.rect.x + enemy.rect.width) >= player.rect.x && // shoot when player in sight
+                          enemy.rect.x <= (player.rect.x + player.rect.width));
     }
     else
         gameover = overBlast(&enemy);
-    for (int i = 0; i < maxShots; i++)
-        moveShot(&enemy.shots[i]);
 
     // player logic
     if (player.alive)
     {
-        moveShip(&player);
+        handleMovement(&player);
         for (int i = 0; i < maxShots; i++)
             if (checkShot(&enemy.shots[i], player.rect))
                 enemy.score++, player.health--;
-        shoot(&player);
+        shoot(&player, IsKeyDown(KEY_F) || IsKeyDown(KEY_SPACE));
     }
     else
         gameover = overBlast(&player);
+
     for (int i = 0; i < maxShots; i++)
-        moveShot(&player.shots[i]);
+        moveShot(&enemy.shots[i]),
+            moveShot(&player.shots[i]);
 }
 
 void drawGame(void)
@@ -113,10 +147,8 @@ void drawGame(void)
     player.alive ? drawShip(&player) : drawBlast(&player);
 
     for (int i = 0; i < maxShots; i++)
-    {
-        drawShot(&enemy.shots[i]);
-        drawShot(&player.shots[i]);
-    }
+        drawShot(&enemy.shots[i]),
+            drawShot(&player.shots[i]);
 
 #ifdef DEBUG
     // center divider
