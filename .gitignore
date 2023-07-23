@@ -1,5 +1,7 @@
-*.dSYM
-.vscode
 .DS_Store
 .env
 main
+*.dSYM
+CMakeLists.txt
+build/
+.vscode/

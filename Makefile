@@ -1,11 +1,11 @@
-.PHONY := run build clean
+.PHONY := run build_ clean
 ARGS := $(shell pkg-config --libs --cflags raylib)
 FILE := main
 
-run: build
+run: build_
 	./${FILE}
 
-build: ${FILE}.c
+build_: ${FILE}.c
 	eval cc ${FILE}.c $(ARGS) -o ${FILE}
 
 clean:

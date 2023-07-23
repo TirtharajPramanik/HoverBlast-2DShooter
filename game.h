@@ -6,11 +6,11 @@
 #endif
 
 Ship enemy, player;
-bool running, pause;
+bool gameover, pause;
 
 void resetGame(void)
 {
-    pause = false, running = player.alive && enemy.alive;
+    pause = false, gameover = !(player.alive && enemy.alive);
     initShip(&enemy, gameWidth() / 2, 0, true);
     initShip(&player, gameWidth() / 2, gameHeight(), false);
 }
@@ -77,7 +77,7 @@ void updateGame(void)
         shoot(&enemy);
     }
     else
-        running = !overBlast(&enemy);
+        gameover = overBlast(&enemy);
     for (int i = 0; i < maxShots; i++)
         moveShot(&enemy.shots[i]);
 
@@ -91,7 +91,7 @@ void updateGame(void)
         shoot(&player);
     }
     else
-        running = !overBlast(&player);
+        gameover = overBlast(&player);
     for (int i = 0; i < maxShots; i++)
         moveShot(&player.shots[i]);
 }

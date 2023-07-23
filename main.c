@@ -7,10 +7,10 @@ int main(void)
     loadAssets();
     resetGame();
 
-    running = false, SetTargetFPS(frameRate);
+    gameover = true, SetTargetFPS(frameRate);
     while (!WindowShouldClose())
-        running && !pause ? (updateGame(), drawGame())
-                          : (updateMenu(), drawMenu());
+        gameover || pause ? (updateMenu(), drawMenu())
+                          : (updateGame(), drawGame());
 
     unloadAssets();
     CloseAudioDevice();

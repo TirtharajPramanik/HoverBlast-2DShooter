@@ -67,7 +67,7 @@ bool overBlast(Ship *ship)
     return ret;
 }
 
-static void accelerate(float *speed, int xAxis, int yAxis, float accel, float maxShipSpeed)
+static void accelerate(float *speed, int xAxis, int yAxis, float accel)
 {
     if (IsKeyDown(xAxis))
     {
@@ -106,32 +106,24 @@ void moveShip(Ship *ship)
     int *moves = (ship->isEnemy) ? (int[]){KEY_RIGHT, KEY_LEFT, KEY_DOWN, KEY_UP}
                                  : (int[]){KEY_A, KEY_D, KEY_W, KEY_S};
 
-    accelerate(&ship->xSpeed, moves[0], moves[1], ship->accel, maxShipSpeed);
-    accelerate(&ship->ySpeed, moves[2], moves[3], ship->accel, maxShipSpeed);
+    accelerate(&ship->xSpeed, moves[0], moves[1], ship->accel);
+    accelerate(&ship->ySpeed, moves[2], moves[3], ship->accel);
 
     float frameDelta = GetFrameTime();
     ship->rect.x += ship->xSpeed * frameDelta;
     ship->rect.y += ship->ySpeed * frameDelta;
 
+    // horizontal collision
     if (ship->rect.x < 0)
-        ship->rect.x = 0;
+        ship->xSpeed < 0 ? (ship->xSpeed *= -1) : (ship->rect.x = 0);
     else if (ship->rect.x > gameWidth() - ship->rect.width)
-        ship->rect.x = gameWidth() - ship->rect.width;
+        ship->xSpeed > 0 ? (ship->xSpeed *= -1) : (ship->rect.x = gameWidth() - ship->rect.width);
 
-    if (ship->isEnemy)
-    {
-        if (ship->rect.y < 0)
-            ship->rect.y = 0;
-        else if (ship->rect.y > arenaHeight() - ship->rect.height)
-            ship->rect.y = arenaHeight() - ship->rect.height;
-    }
-    else
-    {
-        if (ship->rect.y < arenaHeight())
-            ship->rect.y = arenaHeight();
-        else if (ship->rect.y > gameHeight() - ship->rect.height)
-            ship->rect.y = gameHeight() - ship->rect.height;
-    }
+    // vertical collision
+    if (ship->rect.y < (ship->isEnemy ? 0 : arenaHeight()))
+        ship->ySpeed < 0 ? (ship->ySpeed *= -1) : (ship->rect.y = (ship->isEnemy ? 0 : arenaHeight()));
+    else if (ship->rect.y > (ship->isEnemy ? arenaHeight() : gameHeight()) - ship->rect.height)
+        ship->ySpeed > 0 ? (ship->ySpeed *= -1) : (ship->rect.y = (ship->isEnemy ? arenaHeight() : gameHeight()) - ship->rect.height);
 }
 
 void shoot(Ship *ship)
