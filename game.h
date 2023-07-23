@@ -11,8 +11,8 @@ bool gameover, pause;
 void resetGame(void)
 {
     pause = false, gameover = !(player.alive && enemy.alive);
-    initShip(&enemy, gameWidth() / 2, 0, true);
-    initShip(&player, gameWidth() / 2, gameHeight(), false);
+    initShip(&enemy, arenaWidth() / 2, 0, true);
+    initShip(&player, arenaWidth() / 2, GetScreenHeight(), false);
 }
 
 void updateMenu(void)
@@ -36,21 +36,21 @@ void drawMenu(void)
     ClearBackground(RAYWHITE);
 
     // background tiles
-    for (int y = 0; y < gameHeight(); y += bgSpan)
-        for (int x = 0; x < gameWidth(); x += bgSpan)
+    for (int y = 0; y < GetScreenHeight(); y += bgSpan)
+        for (int x = 0; x < GetScreenWidth(); x += bgSpan)
             DrawTextureRec(backgroundTexture, (Rectangle){xMenuOffset, yMenuOffset, bgSpan, bgSpan}, (Vector2){x, y}, WHITE);
 
     char gameOverText[] = "Hover Blast";
-    DrawText(gameOverText, gameWidth() / 2 - MeasureText(gameOverText, 24) / 2, arenaHeight() - 32 * 3, 32, VIOLET);
+    DrawText(gameOverText, GetScreenWidth() / 2 - MeasureText(gameOverText, 24) / 2, arenaHeight() - 32 * 3, 32, VIOLET);
 
     char replayText[] = "Press [Enter] to Play/Replay";
-    DrawText(replayText, gameWidth() / 2 - MeasureText(replayText, 24) / 2, arenaHeight() - 24 * 1, 24, LIME);
+    DrawText(replayText, GetScreenWidth() / 2 - MeasureText(replayText, 24) / 2, arenaHeight() - 24 * 1, 24, LIME);
 
     char toggleFullscreenText[] = "Press [Space] to Toggle FullScreen";
-    DrawText(toggleFullscreenText, gameWidth() / 2 - MeasureText(toggleFullscreenText, 24) / 2, arenaHeight() - 24 * -1, 24, RED);
+    DrawText(toggleFullscreenText, GetScreenWidth() / 2 - MeasureText(toggleFullscreenText, 24) / 2, arenaHeight() - 24 * -1, 24, RED);
 
     char togglePauseText[] = "Press [P] to Pause/Resume";
-    DrawText(togglePauseText, gameWidth() / 2 - MeasureText(togglePauseText, 24) / 2, arenaHeight() - 24 * -3, 24, BLUE);
+    DrawText(togglePauseText, GetScreenWidth() / 2 - MeasureText(togglePauseText, 24) / 2, arenaHeight() - 24 * -3, 24, BLUE);
 
     EndDrawing();
 }
@@ -102,9 +102,12 @@ void drawGame(void)
     ClearBackground(RAYWHITE);
 
     // background tiles
-    for (int y = 0; y < gameHeight(); y += bgSpan)
-        for (int x = 0; x < gameWidth(); x += bgSpan)
+    for (int y = 0; y < GetScreenHeight(); y += bgSpan)
+        for (int x = 0; x < arenaWidth(); x += bgSpan)
             DrawTextureRec(backgroundTexture, (Rectangle){xGameOffset, yGameOffset, bgSpan, bgSpan}, (Vector2){x, y}, WHITE);
+
+    drawShipStats(&enemy);
+    drawShipStats(&player);
 
     enemy.alive ? drawShip(&enemy) : drawBlast(&enemy);
     player.alive ? drawShip(&player) : drawBlast(&player);
@@ -117,7 +120,7 @@ void drawGame(void)
 
 #ifdef DEBUG
     // center divider
-    DrawLine(0, arenaHeight(), gameWidth(), arenaHeight(), BLUE);
+    DrawLine(0, arenaHeight(), arenaWidth(), arenaHeight(), BLUE);
     drawShotsSpeednPositions(2, enemy, player);
     drawShipnShotsBounds(2, enemy, player);
     drawShipSpeednHealth(2, enemy, player);

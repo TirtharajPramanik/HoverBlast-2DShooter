@@ -37,7 +37,7 @@ void moveShot(Shot *shot)
             shot->speed = maxShotSpeed;
 
         shot->pos.y += shot->speed * GetFrameTime() * (shot->fromEnemy ? 1 : -1);
-        if ((shot->fromEnemy ? shot->pos.y > gameHeight() : shot->pos.y < 0))
+        if ((shot->fromEnemy ? shot->pos.y > GetScreenHeight() : shot->pos.y < 0))
             shot->active = false, shot->speed = 0;
     }
 }
