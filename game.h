@@ -6,59 +6,82 @@
 #endif
 
 Ship enemy, player;
-bool gameover, pause;
-int botFrameDelay = 0, botFollowThresh = 300;
+Rectangle inputTextRect;
+bool gameover, pause, mouseOnText;
+char nameInput[maxInputChars + 1] = "\0"; // Name is not reset
+int botFrameDelay, inputLetterCount, cursorBlinkDelay;
 
 void resetGame(void)
 {
-    pause = false, gameover = !(player.alive && enemy.alive), botFrameDelay = 0;
+    pause = false, gameover = !(player.alive && enemy.alive), mouseOnText = false;
+    botFrameDelay = 0, inputLetterCount = 0, botFrameDelay = 0, cursorBlinkDelay = 0;
     initShip(&enemy, arenaWidth() / 2, 0, true);
     initShip(&player, arenaWidth() / 2, GetScreenHeight(), false);
 }
 
-void calculateBotMovement(Ship *enemy, Ship *player)
-{
-    // avoid bullet hits (intentinally, does not move out of the way of bullets, instead moves to the direction where is more space)
-    botFrameDelay++;
-    if (botFrameDelay > 6)
-        botFrameDelay = 0, enemy->direc = NONE;
-    else if (enemy->direc == UP || enemy->direc == DOWN)
-        enemy->direc = NONE;
-    else
-        for (int i = 0; i < maxShots; i++)
-            if (player->shots[i].active && player->shots[i].pos.y < arenaHeight())
-                enemy->direc = enemy->rect.x < arenaWidth() / 2 ? RIGHT : LEFT;
-
-    // follow player when too far
-    if (player->rect.x - enemy->rect.x > botFollowThresh)
-        enemy->direc = RIGHT;
-    else if (player->rect.x - enemy->rect.x < -botFollowThresh)
-        enemy->direc = LEFT;
-
-    // randomly move up & down
-    if (GetRandomValue(0, 100) == 0)
-        enemy->direc = GetRandomValue(0, 1) ? UP : DOWN;
-}
-
 void drawShipStats(Ship *ship)
 {
-    drawStats(ship->isEnemy ? "Enemy" : "Player", ship->score, ship->health,
-              ship->isEnemy ? 24 : GetScreenHeight() - 24 * 4, 24, ship->isEnemy ? RED : VIOLET);
+    drawStats(ship->isEnemy ? "Bot" : ((nameInput[0] == '\0') ? "Player" : nameInput), ship->score, ship->health,
+              ship->isEnemy ? fontSize : GetScreenHeight() - fontSize * 4, fontSize, ship->isEnemy ? RED : VIOLET);
+}
+
+void updateTextInput()
+{
+    cursorBlinkDelay = mouseOnText ? cursorBlinkDelay + 1 : 0;
+    mouseOnText = CheckCollisionPointRec(GetMousePosition(), inputTextRect);
+    if (mouseOnText)
+    {
+        SetMouseCursor(MOUSE_CURSOR_IBEAM);
+        int key = GetCharPressed();
+        // Check if more characters have been pressed on the same frame
+        while (key > 0)
+        { // only allow keys in range [33..125]
+            if ((key >= 33) && (key <= 125) && (inputLetterCount < maxInputChars))
+            {
+                nameInput[inputLetterCount] = (char)key;
+                nameInput[inputLetterCount + 1] = '\0'; // add null terminator at the end of the string
+                inputLetterCount++;
+            }
+            key = GetCharPressed();
+        }
+        if (IsKeyPressed(KEY_BACKSPACE))
+        {
+            inputLetterCount--;
+            if (inputLetterCount < 0)
+                inputLetterCount = 0;
+            nameInput[inputLetterCount] = '\0';
+        }
+    }
+    else
+        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+}
+
+void drawTextInput(void)
+{
+    DrawRectangleRec(inputTextRect, LIGHTGRAY);
+    DrawRectangleLines(inputTextRect.x, inputTextRect.y, inputTextRect.width, inputTextRect.height, mouseOnText ? RED : DARKGRAY);
+
+    DrawText(nameInput, inputTextRect.x + 5, inputTextRect.y + 8, fontSize, MAROON);
+    DrawText(TextFormat("INPUT CHARS: %i/%i", inputLetterCount, maxInputChars),
+             inputTextRect.x, inputTextRect.y + inputTextRect.height + 8, fontSize / 1.5, DARKGRAY);
+    // draw blinking underscore char
+    if (mouseOnText && inputLetterCount < maxInputChars)
+        if (((cursorBlinkDelay / 20) % 2) == 0)
+            DrawText("_", inputTextRect.x + 8 + MeasureText(nameInput, fontSize), inputTextRect.y + 12, fontSize, MAROON);
 }
 
 void updateMenu(void)
 {
-    if (IsKeyPressed(KEY_P) && pause)
+    if (IsKeyPressed(KEY_TAB) && pause)
         pause = false;
-
     else if (IsKeyPressed(KEY_ENTER))
         resetGame();
-
     else if (IsKeyPressed(KEY_SPACE))
         IsWindowFullscreen()
             ? (ToggleFullscreen(), SetWindowSize(windowWidth, windowHeight))
             : (SetWindowSize(GetMonitorWidth(GetCurrentMonitor()), GetMonitorHeight(GetCurrentMonitor())),
                ToggleFullscreen());
+    updateTextInput();
 }
 
 void drawMenu(void)
@@ -71,19 +94,52 @@ void drawMenu(void)
         for (int x = 0; x < GetScreenWidth(); x += bgSpan)
             DrawTextureRec(backgroundTexture, (Rectangle){xMenuOffset, yMenuOffset, bgSpan, bgSpan}, (Vector2){x, y}, WHITE);
 
-    char gameOverText[] = "Hover Blast";
-    DrawText(gameOverText, GetScreenWidth() / 2 - MeasureText(gameOverText, 24) / 2, arenaHeight() - 32 * 3, 32, VIOLET);
+    char gameTitleText[] = "Hover Blast";
+    DrawText(gameTitleText, GetScreenWidth() / 2 - MeasureText(gameTitleText, 32) / 2, arenaHeight() - 32 * 6, 32, VIOLET);
+
+    char nameInputText[] = "Player Name: ";
+    DrawText(nameInputText, GetScreenWidth() / 2 - MeasureText(nameInputText, fontSize), arenaHeight() - 32 * 3, fontSize, GRAY);
+
+    inputTextRect = (Rectangle){(GetScreenWidth() / 2) - (225 / 2), arenaHeight() - 32 * 2, 225, 32};
+    drawTextInput();
 
     char replayText[] = "Press [Enter] to Play/Replay";
-    DrawText(replayText, GetScreenWidth() / 2 - MeasureText(replayText, 24) / 2, arenaHeight() - 24 * 1, 24, LIME);
+    DrawText(replayText, GetScreenWidth() / 2 - MeasureText(replayText, fontSize) / 2, arenaHeight() - fontSize * -1, fontSize, LIME);
 
     char toggleFullscreenText[] = "Press [Space] to Toggle FullScreen";
-    DrawText(toggleFullscreenText, GetScreenWidth() / 2 - MeasureText(toggleFullscreenText, 24) / 2, arenaHeight() - 24 * -1, 24, RED);
+    DrawText(toggleFullscreenText, GetScreenWidth() / 2 - MeasureText(toggleFullscreenText, fontSize) / 2, arenaHeight() - fontSize * -3, fontSize, RED);
 
-    char togglePauseText[] = "Press [P] to Pause/Resume";
-    DrawText(togglePauseText, GetScreenWidth() / 2 - MeasureText(togglePauseText, 24) / 2, arenaHeight() - 24 * -3, 24, BLUE);
+    char togglePauseText[] = "Press [Tab] to Pause/Resume";
+    DrawText(togglePauseText, GetScreenWidth() / 2 - MeasureText(togglePauseText, fontSize) / 2, arenaHeight() - fontSize * -5, fontSize, BLUE);
+
+    char inGameKeysText[] = "In Game: [W A S D] to Move & [Space/F] to Shoot";
+    DrawText(inGameKeysText, GetScreenWidth() / 2 - MeasureText(inGameKeysText, fontSize) / 2, arenaHeight() - fontSize * -7, fontSize, BLACK);
 
     EndDrawing();
+}
+
+void calculateBotMovement(Ship *enemy, Ship *player)
+{
+    // avoid bullet hits (intentinally, does not move out of the way of bullets, instead moves to the direction where is more space)
+    botFrameDelay++;
+    if (botFrameDelay > botMaxFrameDelay)
+        botFrameDelay = 0, enemy->direc = NONE;
+    else if (enemy->direc == UP || enemy->direc == DOWN)
+        enemy->direc = NONE;
+    else
+        for (int i = 0; i < maxShots; i++)
+            if (player->shots[i].active && player->shots[i].pos.y < arenaHeight())
+                enemy->direc = enemy->rect.x < arenaWidth() / 2 ? RIGHT : LEFT;
+
+    // follow player when too far
+    if (player->rect.x - enemy->rect.x > botFollowThresh())
+        enemy->direc = RIGHT;
+    else if (player->rect.x - enemy->rect.x < -botFollowThresh())
+        enemy->direc = LEFT;
+
+    // randomly move up & down
+    if (GetRandomValue(0, botVerticalMoveProba) == 0)
+        enemy->direc = GetRandomValue(0, 1) ? UP : DOWN;
 }
 
 void updateGame(void)
@@ -95,7 +151,7 @@ void updateGame(void)
     else if (player.health <= 0)
         player.alive = false;
 
-    else if (IsKeyPressed(KEY_P))
+    else if (IsKeyPressed(KEY_TAB))
         pause = true;
 
     calculateBotMovement(&enemy, &player);
@@ -106,7 +162,7 @@ void updateGame(void)
         handleMovement(&enemy);
         for (int i = 0; i < maxShots; i++)
             if (checkShot(&player.shots[i], enemy.rect))
-                player.score++, enemy.health--;
+                PlaySound(getShotSound), player.score++, enemy.health--;
         shoot(&enemy, (enemy.rect.x + enemy.rect.width) >= player.rect.x && // shoot when player in sight
                           enemy.rect.x <= (player.rect.x + player.rect.width));
     }
@@ -119,7 +175,7 @@ void updateGame(void)
         handleMovement(&player);
         for (int i = 0; i < maxShots; i++)
             if (checkShot(&enemy.shots[i], player.rect))
-                enemy.score++, player.health--;
+                PlaySound(getShotSound), enemy.score++, player.health--;
         shoot(&player, IsKeyDown(KEY_F) || IsKeyDown(KEY_SPACE));
     }
     else
