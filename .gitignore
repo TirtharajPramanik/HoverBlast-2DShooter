@@ -5,3 +5,5 @@ main
 CMakeLists.txt
 build/
 .vscode/
+raylib*/
+_deps/

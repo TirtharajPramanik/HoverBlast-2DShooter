@@ -2,18 +2,17 @@
 
 int main(void)
 {
-    InitWindow(windowWidth, windowHeight, windowTitle);
-    InitAudioDevice();
     loadAssets();
     resetGame();
 
-    gameover = true, SetTargetFPS(frameRate);
+    SetTargetFPS(frameRate);
+    PlayMusicStream(backgroundMusic);
+
+    gameover = true;
     while (!WindowShouldClose())
-        gameover || pause ? (updateMenu(), drawMenu())
-                          : (updateGame(), drawGame());
+        gameover || pause ? (updateMenu(), helpDraw(drawMenu))
+                          : (updateGame(), helpDraw(drawGame));
 
     unloadAssets();
-    CloseAudioDevice();
-    CloseWindow();
     return 0;
 }
